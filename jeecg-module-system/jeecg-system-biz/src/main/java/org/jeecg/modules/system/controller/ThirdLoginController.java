@@ -303,9 +303,13 @@ public class ThirdLoginController {
 		return result;
 	}
 
+/********************************************************第三方微信等授权start***************************************************************************/
+
 	/**
 	 * 企业微信/钉钉 OAuth2登录
-	 *
+	 * 1. 本服务的前端请求（微信）授权
+	 * 2.后台会把微信服务器认证成功后需要重定向的url 一起发送给微信。
+	 * 3.callback就是这个类中的/oauth2/{source}/callback
 	 * @param source
 	 * @param state
 	 * @return
@@ -338,7 +342,7 @@ public class ThirdLoginController {
 			// 应用授权作用域。
 			// snsapi_base：静默授权，可获取成员的的基础信息（UserId与DeviceId）；
 			builder.append("&scope=snsapi_base");
-			// 重定向后会带上state参数，长度不可超过128个字节
+			// 重定向后会带上state参数，长度不可超过128个字节。会原样返回？？
 			builder.append("&state=").append(state);
 			// 终端使用此参数判断是否需要带上身份信息
 			builder.append("#wechat_redirect");
@@ -383,7 +387,6 @@ public class ThirdLoginController {
 
     /**
      * 企业微信/钉钉 OAuth2登录回调
-     *
      * @param code
      * @param state
      * @param response
@@ -397,6 +400,7 @@ public class ThirdLoginController {
 			@RequestParam(value = "code", required = false) String code,
 			// 钉钉返回的code
 			@RequestParam(value = "authCode", required = false) String authCode,
+			//原样返回的state
 			@RequestParam("state") String state,
 			@RequestParam(name = "tenantId",defaultValue = "0") String tenantId,
 			HttpServletResponse response) {
@@ -429,6 +433,7 @@ public class ThirdLoginController {
 			}
 
 			String token = saveToken(loginUser);
+			//重定向到前端页面，并带上token
 			state += "/oauth2-app/login?oauth2LoginToken=" + URLEncoder.encode(token, "UTF-8") + "&tenantId=" + URLEncoder.encode(tenantId, "UTF-8");
 			//update-begin---author:wangshuai ---date:20220613  for：[issues/I5BOUF]oauth2 钉钉无法登录------------
 			state += "&thirdType=" + source;
@@ -452,6 +457,13 @@ public class ThirdLoginController {
             return "解码失败";
         }
     }
+
+
+	/********************************************************第三方微信等授权end********************************************************************	/
+
+
+
+
 
 	/**
 	 * 注册账号并绑定第三方账号 【低代码应用专用接口】
